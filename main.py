@@ -1,4 +1,3 @@
-
 import cv2
 import streamlit as st
 from PIL import Image
@@ -30,35 +29,6 @@ def apply_gaussian_blur(img, k_size):
     blurred_image = cv2.GaussianBlur(img, (k_size, k_size), 0)
     return blurred_image
 
-def remove_background(img, lower_bound, upper_bound):
-    # Helper function to convert HEX color to RGB
-    def hex_to_rgb(hex_color):
-        hex_color = hex_color.lstrip("#")
-        return tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
-    # Convert the image from BGR to HSV color space
-    hsv_image = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-
-    # Define the lower and upper bounds for the background color
-    lower_bound_rgb = hex_to_rgb(lower_bound)
-    upper_bound_rgb = hex_to_rgb(upper_bound)
-
-    # Convert RGB to HSV
-    lower_bound_hsv = colorsys.rgb_to_hsv(*lower_bound_rgb)
-    upper_bound_hsv = colorsys.rgb_to_hsv(*upper_bound_rgb)
-
-    # Scale the values to the HSV range (H: 0-360, S: 0-255, V: 0-255)
-    lower_bound_hsv = np.array([lower_bound_hsv[0] * 360, lower_bound_hsv[1] * 255, lower_bound_hsv[2] * 255])
-    upper_bound_hsv = np.array([upper_bound_hsv[0] * 360, upper_bound_hsv[1] * 255, upper_bound_hsv[2] * 255])
-
-    # Create a mask based on color thresholding
-    mask = cv2.inRange(hsv_image, lower_bound_hsv, upper_bound_hsv)
-
-    # Invert the mask (to get the foreground instead of background)
-    inverted_mask = cv2.bitwise_not(mask)
-
-    # Apply the mask to the original image
-    foreground = cv2.bitwise_and(img, img, mask=inverted_mask)
-    return foreground
 
 
 # Function to crop an image with variable parameters
@@ -111,16 +81,6 @@ def detect_and_describe_features(img, method):
 
     return image_with_keypoints, keypoints, descriptors
 
-def apply_custom_filter(img, kernel):
-
-    if img is None:
-        st.error("Error: Unable to load the image.")
-        return
-
-    # Apply the custom convolution kernel using cv2.filter2D
-    filtered_image = cv2.filter2D(img, -1, kernel)
-
-    return filtered_image
 
 def main():
 
@@ -157,18 +117,7 @@ def main():
         low_threshold = st.sidebar.slider("Low Threshold:", min_value=0, max_value=255, step=1, value=100)
         high_threshold = st.sidebar.slider("High Threshold:", min_value=0, max_value=255, step=1, value=200)
 
-        kernel_size = st.sidebar.slider("Kernel Size:", min_value=3, max_value=15, step=2, value=3)
-        kernel_values = st.sidebar.text_area("Kernel Values (comma-separated):", value='1,1,1\n1,1,1\n1,1,1')
 
-        # Convert the kernel values to a NumPy array
-        try:
-            kernel_values = np.fromstring(kernel_values, sep=",", dtype=int)
-            kernel = np.reshape(kernel_values, (kernel_size, kernel_size))
-        except Exception as e:
-            st.error("Error: Invalid kernel values. Please enter a valid comma-separated list.")
-
-        #display oroginal pic
-        st.image(img,channels="BGR", use_column_width=True)
 
         #buttons
 
@@ -228,15 +177,6 @@ def main():
                 st.subheader(f"{method} Descriptors (First 5)")
                 st.write(descriptors[:5])
 
-        if st.button('Apply Filter'):
-            filtered_image = apply_custom_filter(img, kernel)
-
-            # Display the original and filtered images
-            st.subheader("Original Image")
-            st.image(uploaded_file, caption="Original Image", use_column_width=True)
-
-            st.subheader("Filtered Image")
-            st.image(filtered_image, caption="Filtered Image", use_column_width=True)
 
 
 if __name__ == "__main__":
