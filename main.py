@@ -116,8 +116,8 @@ def main():
         # Get the threshold values from the user
         low_threshold = st.sidebar.slider("Low Threshold:", min_value=0, max_value=255, step=1, value=100)
         high_threshold = st.sidebar.slider("High Threshold:", min_value=0, max_value=255, step=1, value=200)
-
-
+        #original image
+        st.image(uploaded_file,use_column_width=True)
 
         #buttons
 
